@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fff0f7">
+<title>LabKit — Miss Heaven's Mod Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.85em' font-size='80'%3E🧪%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg:#fff5fa;--surface:#fff;--surface2:#fff0f7;
+  --pink:#ec78ae;--pink-dark:#c94e8b;--pink-light:#ffe0ef;
+  --purple:#a58bd8;--purple-light:#eee7ff;
+  --text:#493448;--muted:#a58c9f;--border:#f1dce9;
+  --green:#55a987;--red:#d95c77;
+  --shadow:0 5px 20px rgba(190,113,158,.08);
+  --mono:'DM Mono',monospace;--sans:'Nunito',sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:0 9px 23px;border-bottom:1px solid var(--border)}
+.brand-icon{width:44px;height:44px;display:grid;place-items:center;background:var(--pink-light);border:1px solid #f5c4dd;border-radius:14px;font-size:23px}
+.brand-name{font-weight:900;font-size:21px;letter-spacing:-.7px}
+.brand-sub{color:var(--muted);font:9px var(--mono);margin-top:3px}
+.nav-label{color:#b69bae;font:10px var(--mono);letter-spacing:1.4px;padding:24px 11px 9px}
+.nav-btn{border:0;background:transparent;color:#927b8e;width:100%;text-align:left;padding:11px 12px;border-radius:10px;margin:2px 0;font-weight:800;font-size:13px;display:flex;align-items:center;gap:11px;transition:.2s}
+.nav-btn:hover{background:var(--surface2);color:var(--pink-dark)}
+.nav-btn.active{background:var(--pink-light);color:var(--pink-dark);box-shadow:inset 3px 0 var(--pink)}
+.nav-icon{width:20px;text-align:center;font-size:16px}
+.sidebar-footer{margin-top:auto;padding:15px 10px 0;border-top:1px solid var(--border);color:#b49eaf;font:10px/1.9 var(--mono)}
+.main{flex:1;min-width:0}
+.topbar{height:66px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 35px;background:rgba(255,255,255,.85)}
+.breadcrumb{color:var(--muted);font-size:13px}
+.breadcrumb strong{color:var(--pink-dark)}
+.status{color:var(--green);font:10px var(--mono);background:#e8f8f0;padding:7px 11px;border-radius:20px}
+.status:before{content:"●";margin-right:7px}
+.content{max-width:1080px;padding:42px 40px 70px;margin:auto}
+.tool{display:none}.tool.active{display:block}
+.eyebrow{color:var(--pink-dark);font:11px var(--mono);letter-spacing:1.7px;text-transform:uppercase;margin-bottom:10px}
+h1{font-size:clamp(27px,4vw,38px);margin:0;letter-spacing:-1px}
+.subtitle{color:var(--muted);margin:9px 0 30px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:22px;margin-bottom:17px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:900;margin-bottom:15px;display:flex;align-items:center;gap:9px}
+.card-title span{color:var(--pink)}
+label{display:block;color:#80677d;font-size:12px;font-weight:800;margin:14px 0 7px}
+input,textarea,select{width:100%;color:var(--text);background:#fff9fc;border:1px solid var(--border);border-radius:9px;padding:11px 12px;outline:none;font-size:13px}
+input:focus,textarea:focus,select:focus{border-color:var(--pink);box-shadow:0 0 0 3px #ffe6f2}
+textarea{min-height:190px;resize:vertical;font:12px/1.7 var(--mono)}
+textarea.short{min-height:110px}
+select{cursor:pointer}
+.row{display:flex;gap:12px}.row>*{flex:1;min-width:0}
+.btn{border:1px solid #e7b4d0;background:#fce6f1;color:#9e4778;padding:10px 16px;border-radius:9px;font-size:12px;font-weight:900;transition:.2s}
+.btn:hover{background:#f8d4e7;transform:translateY(-1px)}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:white}
+.btn.primary:hover{background:var(--pink-dark)}
+.btn.secondary{background:var(--purple-light);border-color:#ded2f6;color:#8068b3}
+.btn.danger{background:#fff0f1;border-color:#f4cbd2;color:var(--red)}
+.btn:disabled{opacity:.55;cursor:wait;transform:none}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.output{background:#fff8fc;border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--green);font:12px/1.7 var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;min-height:48px}
+.output.error{color:var(--red)}.output:empty{display:none}
+.notice{color:var(--muted);font-size:12px;line-height:1.7;margin-top:12px}
+.home-hero{background:linear-gradient(120deg,#ffe4f1,#f0eaff);border:1px solid #f2d4e8;border-radius:18px;padding:27px;margin-bottom:24px;position:relative;overflow:hidden}
+.home-hero h1{color:#714a70}
+.home-hero p{color:#92738e;font-size:14px;max-width:480px;line-height:1.7}
+.hero-decoration{position:absolute;right:30px;top:18px;font-size:85px;opacity:.65;transform:rotate(12deg)}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:19px;cursor:pointer;transition:.2s;box-shadow:var(--shadow)}
+.home-card:hover{border-color:var(--pink);transform:translateY(-3px)}
+.home-icon{width:43px;height:43px;background:var(--pink-light);display:grid;place-items:center;border-radius:12px;font-size:21px;margin-bottom:13px}
+.home-card:nth-child(even) .home-icon{background:var(--purple-light)}
+.home-card h3{font-size:14px;margin:0 0 6px}
+.home-card p{color:var(--muted);font-size:12px;line-height:1.6;margin:0}
+.tag{display:inline-block;margin-top:13px;color:var(--pink-dark);background:var(--pink-light);padding:4px 8px;border-radius:5px;font:10px var(--mono)}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.result-box{background:#fff8fc;border:1px solid var(--border);padding:14px;border-radius:10px}
+.result-label{color:var(--muted);font:10px var(--mono);margin-bottom:8px}
+.result-value{font:13px var(--mono);overflow-wrap:anywhere}
+.color-preview{width:100%;height:75px;border-radius:10px;border:1px solid var(--border);margin-top:14px;background:var(--pink)}
+.history-item{display:flex;align-items:center;gap:12px;padding:13px 3px;border-bottom:1px solid var(--border)}
+.history-item:last-child{border-bottom:0}
+.history-icon{font-size:19px}.history-name{font-weight:800;font-size:13px}
+.history-time{color:var(--muted);font:10px var(--mono);margin-top:3px}
+.about-logo{width:85px;height:85px;border-radius:24px;background:var(--pink-light);border:1px solid #f1c8dd;display:grid;place-items:center;font-size:45px;margin-bottom:20px}
+.about-list{padding-left:20px;color:#90788b;font-size:13px;line-height:2}
+.hint{background:#fff5fa;border:1px solid var(--border);padding:12px;border-radius:9px;color:#92738e;font-size:12px;line-height:1.7;margin-top:12px}
+.progress{height:7px;background:#f8e4ef;border-radius:10px;overflow:hidden;margin-top:12px;display:none}
+.progress-bar{height:100%;width:0;background:var(--pink);transition:width .2s}
+.mobile-menu{display:none}
+@media(max-width:720px){
+.sidebar{display:none;position:fixed;z-index:10;inset:0 auto 0 0;width:260px;box-shadow:20px 0 60px #55304a22}
+.sidebar.open{display:flex}.mobile-menu{display:inline-block}
+.topbar{padding:0 15px}.content{padding:28px 16px 50px}
+.row{flex-direction:column;gap:0}.hero-decoration{right:12px;font-size:60px;opacity:.35}
+}
+.check-option{display:flex;align-items:center;gap:10px;margin:14px 0 4px;font-weight:800;color:var(--text)}.check-option input{width:17px;height:17px;accent-color:var(--pink)}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-icon">🧪</div>
+    <div><div class="brand-name">LabKit</div><div class="brand-sub">MISS HEAVEN'S MOD LAB</div></div>
+  </div>
+  <div class="nav-label">WORKSPACE</div>
+  <button class="nav-btn active" data-tool="home"><span class="nav-icon">⌂</span> Overview</button>
+  <button class="nav-btn" data-tool="history"><span class="nav-icon">◷</span> Recent activity</button>
+  <div class="nav-label">DEVELOPER TOOLS</div>
+  <button class="nav-btn" data-tool="json"><span class="nav-icon">{ }</span> JSON Formatter</button>
+  <button class="nav-btn" data-tool="uuid"><span class="nav-icon">⌗</span> UUID Generator</button>
+  <button class="nav-btn" data-tool="metadata"><span class="nav-icon">▤</span> Fabric Metadata</button>
+  <button class="nav-btn" data-tool="fabric"><span class="nav-icon">🧩</span> Fabric Project Generator</button>
+  <button class="nav-btn" data-tool="dependency"><span class="nav-icon">🔎</span> Dependency Checker</button>
+  <button class="nav-btn" data-tool="readme"><span class="nav-icon">📄</span> Modrinth README Generator</button>
+  <button class="nav-btn" data-tool="color"><span class="nav-icon">◈</span> Color Converter</button>
+  <button class="nav-btn" data-tool="changelog"><span class="nav-icon">≡</span> Changelog Builder</button>
+  <div class="nav-label">INFORMATION</div>
+  <button class="nav-btn" data-tool="about"><span class="nav-icon">♡</span> About LabKit</button>
+  <div class="sidebar-footer">LABKIT v1.5.0<br>MADE WITH ♡ BY MISS HEAVEN</div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div>
+    <button class="btn secondary mobile-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <span class="breadcrumb">LabKit / <strong id="crumb">Overview</strong></span>
+  </div>
+  <div class="status">SYSTEM ONLINE</div>
+</header>
+
+<div class="content">
+
+<section class="tool active" id="home">
+  <div class="home-hero">
+    <div class="eyebrow">✦ Welcome, researcher</div>
+    <h1>Your developer toolkit.</h1>
+    <p>A collection of small utilities for your next big experiment. Pick a tool and get to work!</p>
+    <div class="hero-decoration">🧪</div>
+  </div>
+  <div class="eyebrow">✦ Available equipment</div>
+  <h1 style="font-size:22px;margin-bottom:17px">Developer tools</h1>
+  <div class="home-grid">
+    <div class="home-card" onclick="showTool('json')"><div class="home-icon">📋</div><h3>JSON Formatter</h3><p>Format, validate and sort JSON data.</p><span class="tag">DATA</span></div>
+    <div class="home-card" onclick="showTool('uuid')"><div class="home-icon">🔑</div><h3>UUID Generator</h3><p>Generate unique identifiers for your projects.</p><span class="tag">GENERATOR</span></div>
+    <div class="home-card" onclick="showTool('metadata')"><div class="home-icon">🧩</div><h3>Fabric Metadata</h3><p>Build a basic fabric.mod.json file.</p><span class="tag">MINECRAFT</span></div>
+    <div class="home-card" onclick="showTool('fabric')"><div class="home-icon">🛠️</div><h3>Fabric Project Generator</h3><p>Create a starter Fabric mod project and download it as a ZIP.</p><span class="tag">PROJECT SETUP</span></div>
+    <div class="home-card" onclick="showTool('dependency')"><div class="home-icon">🔎</div><h3>Dependency Checker</h3><p>Inspect Fabric metadata dependencies and entrypoints.</p><span class="tag">VALIDATION</span></div>
+    <div class="home-card" onclick="showTool('readme')"><div class="home-icon">📄</div><h3>Modrinth README Generator</h3><p>Build a formatted project description in Markdown.</p><span class="tag">DOCUMENTATION</span></div>
+    <div class="home-card" onclick="showTool('color')"><div class="home-icon">🎨</div><h3>Color Converter</h3><p>Convert HEX, RGB and HSL colors.</p><span class="tag">DESIGN</span></div>
+    <div class="home-card" onclick="showTool('changelog')"><div class="home-icon">📝</div><h3>Changelog Builder</h3><p>Create clean Markdown changelogs.</p><span class="tag">DOCUMENTATION</span></div>
+  </div>
+  <div class="card" style="margin-top:23px"><div class="card-title"><span>♡</span> Laboratory notice</div><p class="notice">LabKit is a browser-based collection of developer utilities. Your input stays in your browser and is not uploaded to a server.</p></div>
+</section>
+
+<section class="tool" id="json">
+  <div class="eyebrow">Developer tool / 01</div><h1>JSON Formatter</h1><p class="subtitle">Validate, format and sort your JSON data.</p>
+  <div class="card"><div class="card-title"><span>▤</span> Input JSON</div>
+    <textarea id="jsonInput" placeholder='{"name":"LabKit","version":"1.4.0"}'></textarea>
+    <div class="actions"><button class="btn primary" onclick="formatJSON()">Format JSON</button><button class="btn secondary" onclick="validateJSON()">Validate</button><button class="btn secondary" onclick="sortJSON()">Sort keys</button><button class="btn danger" onclick="clearJSON()">Clear</button></div>
+  </div>
+  <div class="card"><div class="card-title"><span>⌘</span> Output</div><div class="output" id="jsonOutput"></div><div class="actions"><button class="btn secondary" onclick="copyText('jsonOutput')">Copy output</button></div></div>
+</section>
+
+<section class="tool" id="uuid">
+  <div class="eyebrow">Developer tool / 02</div><h1>UUID Generator</h1><p class="subtitle">Generate unique identifiers for mods, plugins and projects.</p>
+  <div class="card"><div class="card-title"><span>⌗</span> Generator settings</div>
+    <label>Number of UUIDs</label><div class="row"><input type="number" id="uuidCount" min="1" max="100" value="5"><button class="btn primary" onclick="generateUUIDs()">Generate UUIDs</button></div>
+    <p class="notice">Generates UUID version 4 identifiers using your browser's cryptographic random generator.</p>
+  </div>
+  <div class="card"><div class="card-title"><span>⌘</span> Generated UUIDs</div><textarea id="uuidOutput" readonly placeholder="Your generated UUIDs will appear here..."></textarea><div class="actions"><button class="btn secondary" onclick="copyValue('uuidOutput')">Copy all</button><button class="btn secondary" onclick="downloadText('uuids.txt',document.getElementById('uuidOutput').value)">Download .txt</button></div></div>
+</section>
+
+<section class="tool" id="metadata">
+  <div class="eyebrow">Developer tool / 03</div><h1>Fabric Metadata</h1><p class="subtitle">Generate a basic fabric.mod.json file for your Minecraft mod.</p>
+  <div class="card"><div class="card-title"><span>▤</span> Mod information</div>
+    <label>Mod ID</label><input id="modId" placeholder="example: my_mod">
+    <label>Mod name</label><input id="modName" placeholder="My Awesome Mod">
+    <label>Version</label><input id="modVersion" value="1.0.0">
+    <label>Description</label><textarea class="short" id="modDescription" placeholder="Describe what your mod does..."></textarea>
+    <div class="row"><div><label>Authors</label><input id="modAuthors" placeholder="Your name"></div><div><label>License</label><input id="modLicense" value="MIT"></div></div>
+    <label>Environment</label><select id="modEnvironment"><option value="*">Both client and server (*)</option><option value="client">Client only</option><option value="server">Server only</option></select>
+    <label>Entrypoint class</label><input id="modEntrypoint" placeholder="com.example.mymod.MyMod">
+    <div class="actions"><button class="btn primary" onclick="generateMetadata()">Generate metadata</button><button class="btn secondary" onclick="clearMetadata()">Reset</button></div>
+  </div>
+  <div class="card"><div class="card-title"><span>⌘</span> fabric.mod.json</div><textarea id="metadataOutput" readonly placeholder="Your metadata will appear here..."></textarea><div class="actions"><button class="btn secondary" onclick="copyValue('metadataOutput')">Copy JSON</button><button class="btn secondary" onclick="downloadText('fabric.mod.json',document.getElementById('metadataOutput').value)">Download file</button></div></div>
+</section>
+
+<section class="tool" id="fabric">
+  <div class="eyebrow">Developer tool / 04</div>
+  <h1>Fabric Project Generator</h1>
+  <p class="subtitle">Create a starter Fabric mod project and download its files in one ZIP.</p>
+
+  <div class="card">
+    <div class="card-title"><span>🧩</span> Project identity</div>
+    <label>Project / mod name</label>
+    <input id="fgName" value="My First Mod" placeholder="My Awesome Mod">
+    <div class="row">
+      <div><label>Mod ID</label><input id="fgId" value="my_first_mod" placeholder="my_mod"></div>
+      <div><label>Version</label><input id="fgVersion" value="1.0.0" placeholder="1.0.0"></div>
+    </div>
+    <label>Description</label>
+    <textarea class="short" id="fgDescription" placeholder="Describe what your mod does...">A new Minecraft Fabric mod.</textarea>
+    <div class="row">
+      <div><label>Author</label><input id="fgAuthor" value="Miss Heaven"></div>
+      <div><label>License</label><input id="fgLicense" value="MIT"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>⚙</span> Minecraft and Fabric configuration</div>
+    <div class="row">
+      <div><label>Minecraft version</label><input id="fgMinecraft" value="26.2" placeholder="26.2"></div>
+      <div><label>Java version</label><input id="fgJava" value="25" type="number" min="8" max="99"></div>
+    </div>
+    <div class="row">
+      <div><label>Fabric Loader version</label><input id="fgLoader" value="0.19.3" placeholder="0.19.3"></div>
+      <div><label>Fabric API version</label><input id="fgApi" value="0.154.2+26.2" placeholder="0.154.2+26.2"></div>
+    </div>
+    <div class="row">
+      <div><label>Fabric Loom version</label><input id="fgLoom" value="1.17.21" placeholder="1.17.21"></div>
+      <div><label>Gradle version</label><input id="fgGradle" value="9.5.1" placeholder="9.5.1"></div>
+    </div>
+    <label>Mappings</label>
+    <select id="fgMappings">
+      <option value="official">Official Mojang mappings</option>
+    </select>
+    <div class="hint">The initial values are based on a previously used setup. Check that the selected Minecraft, Loader, API, Loom, Gradle and Java versions are compatible before building. The generator does not query live version compatibility.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>☕</span> Java package and entrypoint</div>
+    <label>Java package</label>
+    <input id="fgPackage" value="com.example.myfirstmod" placeholder="com.example.mymod">
+    <label>Main class name</label>
+    <input id="fgClass" value="MyFirstMod" placeholder="MyMod">
+    <div class="hint">Example: package <code>com.example.mymod</code> and class <code>MyMod</code> create <code>src/main/java/com/example/mymod/MyMod.java</code>.</div>
+    <div class="card-title" style="margin-top:22px"><span>✦</span> Optional project components</div>
+    <label class="check-option"><input type="checkbox" id="fgClient" checked> Generate client entrypoint</label>
+    <p class="hint">Adds a separate ClientModInitializer class and registers it in fabric.mod.json.</p>
+    <label class="check-option"><input type="checkbox" id="fgMixin"> Generate a Mixin starter template</label>
+    <p class="hint">Adds a Mixin configuration and an empty example mixin class. It does not modify Minecraft behavior until you add valid injections or overwrite logic.</p>
+    <div id="fgMixinOptions" style="display:none">
+      <label>Target class (fully qualified)</label>
+      <input id="fgMixinTarget" value="net.minecraft.class_310" placeholder="net.minecraft.class_310">
+      <div class="hint">Use the correct mapped target class for your Minecraft version and mappings.</div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="fgGenerate" onclick="generateFabricProject()">Generate project ZIP</button>
+    </div>
+    <div class="progress" id="fgProgress"><div class="progress-bar" id="fgProgressBar"></div></div>
+    <div class="output" id="fgOutput"></div>
+  </div>
+</section>
+
+<section class="tool" id="dependency">
+  <div class="eyebrow">Developer tool / 07</div><h1>Dependency Checker</h1>
+  <p class="subtitle">Inspect a Fabric <code>fabric.mod.json</code> file for common metadata and dependency issues.</p>
+  <div class="card">
+    <div class="card-title"><span>🔎</span> Fabric metadata input</div>
+    <textarea id="dependencyInput" spellcheck="false" placeholder='Paste your fabric.mod.json here...'>{
+  "schemaVersion": 1,
+  "id": "example_mod",
+  "version": "1.0.0",
+  "name": "Example Mod",
+  "description": "A Fabric mod.",
+  "environment": "*",
+  "entrypoints": { "main": ["com.example.ExampleMod"] },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}</textarea>
+    <div class="actions"><button class="btn primary" onclick="checkDependencies()">Check metadata</button><button class="btn secondary" onclick="loadDependencyExample()">Load example</button><button class="btn danger" onclick="clearDependencyInput()">Clear</button></div>
+    <p class="notice">This is a static metadata inspection. It does not download dependencies, resolve version ranges, or verify that libraries exist.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>⌘</span> Check report</div>
+    <div class="output" id="dependencyOutput"></div>
+    <div class="actions"><button class="btn secondary" onclick="copyText('dependencyOutput')">Copy report</button><button class="btn secondary" onclick="downloadText('fabric-dependency-report.txt',document.getElementById('dependencyOutput').textContent)">Download report</button></div>
+  </div>
+</section>
+
+<section class="tool" id="readme">
+  <div class="eyebrow">Developer tool / 08</div><h1>Modrinth README Generator</h1>
+  <p class="subtitle">Create a structured Markdown description for your Modrinth project page.</p>
+  <div class="card">
+    <div class="card-title"><span>📄</span> Project information</div>
+    <label>Project name</label><input id="readmeName" placeholder="OVERFED" value="My Minecraft Mod">
+    <label>Short description</label><textarea class="short" id="readmeDescription" maxlength="300" placeholder="A short summary of your project...">A useful Minecraft mod built with Fabric.</textarea>
+    <div class="row">
+      <div><label>Minecraft versions</label><input id="readmeMinecraft" placeholder="1.21.1, 1.21.4, 26.2"></div>
+      <div><label>Mod loader(s)</label><input id="readmeLoaders" value="Fabric" placeholder="Fabric, Quilt, NeoForge"></div>
+    </div>
+    <label>Features (one per line)</label><textarea class="short" id="readmeFeatures" placeholder="Feature one&#10;Feature two&#10;Feature three"></textarea>
+    <label>Installation instructions</label><textarea class="short" id="readmeInstall" placeholder="1. Install Fabric Loader...&#10;2. Download the mod...&#10;3. Place the .jar in your mods folder.">1. Install the required mod loader.
+2. Download the mod file for your Minecraft version.
+3. Place the .jar file in your `mods` folder.
+4. Launch the game.</textarea>
+    <label>Dependencies / requirements</label><textarea class="short" id="readmeDependencies" placeholder="Fabric API (required)&#10;Other dependencies (optional)"></textarea>
+    <label>Links (one per line, format: Label | URL)</label><textarea class="short" id="readmeLinks" placeholder="Source code | https://github.com/...&#10;Issues | https://github.com/.../issues"></textarea>
+    <label>Credits</label><textarea class="short" id="readmeCredits" placeholder="Development, artwork, contributors..."></textarea>
+    <label>Additional notes</label><textarea class="short" id="readmeNotes" placeholder="Known issues, compatibility notes, configuration tips..."></textarea>
+    <div class="actions"><button class="btn primary" onclick="generateReadme()">Generate README</button><button class="btn secondary" onclick="resetReadme()">Reset</button></div>
+    <p class="notice">This tool creates Markdown text only. It does not publish or upload anything to Modrinth.</p>
+  </div>
+  <div class="card"><div class="card-title"><span>⌘</span> Markdown output</div>
+    <textarea id="readmeOutput" spellcheck="false" placeholder="Your README.md will appear here..."></textarea>
+    <div class="actions"><button class="btn secondary" onclick="copyValue('readmeOutput')">Copy Markdown</button><button class="btn secondary" onclick="downloadText('README.md',document.getElementById('readmeOutput').value)">Download README.md</button></div>
+  </div>
+  <div class="card"><div class="card-title"><span>👁</span> Preview</div><div id="readmePreview" class="output" style="color:var(--text);white-space:normal;min-height:100px"></div></div>
+</section>
+
+<section class="tool" id="color">
+  <div class="eyebrow">Developer tool / 05</div><h1>Color Converter</h1><p class="subtitle">Convert HEX colors into RGB and HSL values.</p>
+  <div class="card"><div class="card-title"><span>◈</span> Color input</div><label>HEX color</label><div class="row"><input id="hexInput" value="#ec78ae" placeholder="#ec78ae"><button class="btn primary" onclick="convertColor()">Convert</button></div><div class="color-preview" id="colorPreview"></div></div>
+  <div class="card"><div class="card-title"><span>⌘</span> Conversion results</div>
+    <div class="result-grid"><div class="result-box"><div class="result-label">HEX</div><div class="result-value" id="hexResult">#EC78AE</div></div><div class="result-box"><div class="result-label">RGB</div><div class="result-value" id="rgbResult">236, 120, 174</div></div><div class="result-box"><div class="result-label">HSL</div><div class="result-value" id="hslResult">332, 74%, 70%</div></div></div>
+    <div class="actions"><button class="btn secondary" onclick="copyResult('hexResult')">Copy HEX</button><button class="btn secondary" onclick="copyResult('rgbResult')">Copy RGB</button><button class="btn secondary" onclick="copyResult('hslResult')">Copy HSL</button></div><div class="output error" id="colorError"></div>
+  </div>
+</section>
+
+<section class="tool" id="changelog">
+  <div class="eyebrow">Developer tool / 06</div><h1>Changelog Builder</h1><p class="subtitle">Create a Markdown changelog for your next release.</p>
+  <div class="card"><div class="card-title"><span>≡</span> Release information</div>
+    <div class="row"><div><label>Project name</label><input id="changeProject" placeholder="OVERFED"></div><div><label>Version</label><input id="changeVersion" placeholder="1.0.0"></div></div>
+    <label>Release type</label><select id="changeType"><option>Initial Release</option><option>Major Update</option><option>Minor Update</option><option>Patch</option><option>Pre-release</option></select>
+    <label>New features</label><textarea class="short" id="changeFeatures" placeholder="One feature per line..."></textarea>
+    <label>Improvements</label><textarea class="short" id="changeImprovements" placeholder="One improvement per line..."></textarea>
+    <label>Bug fixes</label><textarea class="short" id="changeFixes" placeholder="One fix per line..."></textarea>
+    <div class="actions"><button class="btn primary" onclick="buildChangelog()">Build changelog</button><button class="btn secondary" onclick="clearChangelog()">Reset</button></div>
+  </div>
+  <div class="card"><div class="card-title"><span>⌘</span> Markdown output</div><textarea id="changelogOutput" readonly placeholder="Your changelog will appear here..."></textarea><div class="actions"><button class="btn secondary" onclick="copyValue('changelogOutput')">Copy Markdown</button><button class="btn secondary" onclick="downloadText('CHANGELOG.md',document.getElementById('changelogOutput').value)">Download .md</button></div></div>
+</section>
+
+<section class="tool" id="history">
+  <div class="eyebrow">Workspace / Activity</div><h1>Recent activity</h1><p class="subtitle">A record of the tools you've recently opened.</p>
+  <div class="card"><div class="card-title"><span>◷</span> Activity history</div><div id="historyList"></div><div class="actions"><button class="btn danger" onclick="clearHistory()">Clear history</button></div></div>
+</section>
+
+<section class="tool" id="about">
+  <div class="eyebrow">Information / About</div><h1>About LabKit</h1><p class="subtitle">A little toolbox for curious developers.</p>
+  <div class="card"><div class="about-logo">🧪</div><h1 style="font-size:26px">LabKit <span style="color:var(--pink);font-size:14px">v1.5.0</span></h1><p class="notice">LabKit is a collection of simple browser-based utilities designed to make everyday development tasks a little easier.</p><div class="eyebrow" style="margin-top:25px">✦ Created by</div><h2 style="font-size:19px;margin:0">Miss Heaven's Mod Lab</h2><p class="notice">An independent project laboratory for unusual mods, useful tools and strange experiments.</p></div>
+  <div class="card"><div class="card-title"><span>♡</span> What's included</div><ul class="about-list"><li>JSON formatting and validation.</li><li>UUID v4 generation.</li><li>Fabric metadata template generation.</li><li>Fabric project ZIP generation with client entrypoint and Mixin starter options.</li><li>Fabric dependency and metadata inspection.</li><li>Modrinth README generation with Markdown preview.</li><li>HEX, RGB and HSL color conversion.</li><li>Markdown changelog creation.</li><li>Local recent activity history.</li></ul></div>
+  <div class="card"><div class="card-title"><span>ⓘ</span> Project information</div><div class="result-grid"><div class="result-box"><div class="result-label">VERSION</div><div class="result-value">1.5.0</div></div><div class="result-box"><div class="result-label">PLATFORM</div><div class="result-value">Web browser</div></div><div class="result-box"><div class="result-label">DATA STORAGE</div><div class="result-value">Local browser</div></div></div></div>
+</section>
+
+</div>
+</main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const mixinToggle=document.getElementById("fgMixin");
+  const mixinOptions=document.getElementById("fgMixinOptions");
+  if(mixinToggle&&mixinOptions){
+    mixinToggle.addEventListener("change",()=>{mixinOptions.style.display=mixinToggle.checked?"block":"none";});
+  }
+});
+const toolNames={home:"Overview",json:"JSON Formatter",uuid:"UUID Generator",metadata:"Fabric Metadata",fabric:"Fabric Project Generator",dependency:"Dependency Checker",readme:"Modrinth README Generator",color:"Color Converter",changelog:"Changelog Builder",history:"Recent activity",about:"About LabKit"};
+const toolIcons={home:"⌂",json:"📋",uuid:"🔑",metadata:"🧩",fabric:"🛠️",dependency:"🔎",readme:"📄",color:"🎨",changelog:"📝",history:"◷",about:"♡"};
+
+function getHistory(){try{return JSON.parse(localStorage.getItem("labkit_history")||"[]")}catch{return[]}}
+function saveHistory(id){
+  if(["home","history","about"].includes(id))return;
+  let history=getHistory().filter(item=>item.id!==id);
+  history.unshift({id,time:new Date().toISOString()});
+  localStorage.setItem("labkit_history",JSON.stringify(history.slice(0,10)));
+}
+function renderHistory(){
+  const list=document.getElementById("historyList"),history=getHistory();
+  if(!history.length){list.innerHTML='<p class="notice">No activity yet. Start using a tool to see it here!</p>';return}
+  list.innerHTML=history.map(item=>{
+    const date=new Date(item.time),name=toolNames[item.id]||"Unknown tool",icon=toolIcons[item.id]||"🧪";
+    return `<div class="history-item"><div class="history-icon">${icon}</div><div><div class="history-name">${name}</div><div class="history-time">${date.toLocaleString()}</div></div></div>`;
+  }).join("");
+}
+function clearHistory(){
+  if(!confirm("Clear your recent activity history?"))return;
+  localStorage.removeItem("labkit_history");renderHistory();
+}
+function showTool(id){
+  if(!toolNames[id])return;
+  document.querySelectorAll(".tool").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(el=>el.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  const nav=document.querySelector('[data-tool="'+id+'"]');
+  if(nav)nav.classList.add("active");
+  document.getElementById("crumb").textContent=toolNames[id];
+  document.getElementById("sidebar").classList.remove("open");
+  saveHistory(id);
+  if(id==="history")renderHistory();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>showTool(btn.dataset.tool)));
+
+async function copyRaw(value){
+  if(!value)return alert("Nothing to copy.");
+  try{await navigator.clipboard.writeText(value);alert("Copied to clipboard!")}
+  catch{alert("Clipboard access failed. Select and copy the text manually.")}
+}
+function copyText(id){copyRaw(document.getElementById(id).textContent)}
+function copyValue(id){copyRaw(document.getElementById(id).value)}
+function copyResult(id){copyRaw(document.getElementById(id).textContent)}
+function downloadText(filename,content){
+  if(!content)return alert("Nothing to download yet.");
+  const blob=new Blob([content],{type:"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+}
+
+// JSON
+function getJSON(){return JSON.parse(document.getElementById("jsonInput").value)}
+function formatJSON(){
+  const output=document.getElementById("jsonOutput");
+  try{output.classList.remove("error");output.textContent=JSON.stringify(getJSON(),null,2)}
+  catch(e){output.classList.add("error");output.textContent="Invalid JSON: "+e.message}
+}
+function validateJSON(){
+  const output=document.getElementById("jsonOutput");
+  try{getJSON();output.classList.remove("error");output.textContent="✓ Valid JSON. No syntax errors found."}
+  catch(e){output.classList.add("error");output.textContent="✗ Invalid JSON: "+e.message}
+}
+function sortObject(value){
+  if(Array.isArray(value))return value.map(sortObject);
+  if(value&&typeof value==="object")return Object.keys(value).sort().reduce((result,key)=>{result[key]=sortObject(value[key]);return result},{});
+  return value;
+}
+function sortJSON(){
+  const output=document.getElementById("jsonOutput");
+  try{output.classList.remove("error");output.textContent=JSON.stringify(sortObject(getJSON()),null,2)}
+  catch(e){output.classList.add("error");output.textContent="Invalid JSON: "+e.message}
+}
+function clearJSON(){document.getElementById("jsonInput").value="";document.getElementById("jsonOutput").textContent=""}
+
+// UUID
+function generateUUIDs(){
+  const count=Number(document.getElementById("uuidCount").value);
+  if(!Number.isInteger(count)||count<1||count>100)return alert("Choose a number between 1 and 100.");
+  if(!crypto.randomUUID)return alert("Your browser does not support crypto.randomUUID().");
+  document.getElementById("uuidOutput").value=Array.from({length:count},()=>crypto.randomUUID()).join("\n");
+}
+
+// FABRIC METADATA
+function generateMetadata(){
+  const id=document.getElementById("modId").value.trim(),name=document.getElementById("modName").value.trim();
+  const version=document.getElementById("modVersion").value.trim(),description=document.getElementById("modDescription").value.trim();
+  const authors=document.getElementById("modAuthors").value.trim(),license=document.getElementById("modLicense").value.trim();
+  const environment=document.getElementById("modEnvironment").value,entrypoint=document.getElementById("modEntrypoint").value.trim();
+  if(!/^[a-z][a-z0-9_-]*$/.test(id))return alert("Mod ID must start with a lowercase letter and contain only lowercase letters, numbers, underscores or hyphens.");
+  if(!name||!version||!entrypoint)return alert("Please fill in the mod name, version and entrypoint class.");
+  const metadata={schemaVersion:1,id,version,name,description:description||"A Minecraft mod.",authors:authors?authors.split(",").map(x=>x.trim()).filter(Boolean):[],license:license||"All-Rights-Reserved",environment,entrypoints:{main:[entrypoint]}};
+  document.getElementById("metadataOutput").value=JSON.stringify(metadata,null,2);
+}
+function clearMetadata(){
+  ["modId","modName","modDescription","modAuthors","modEntrypoint"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("modVersion").value="1.0.0";
+  document.getElementById("modLicense").value="MIT";
+  document.getElementById("modEnvironment").value="*";
+  document.getElementById("metadataOutput").value="";
+}
+
+// FABRIC PROJECT GENERATOR
+function javaString(value){
+  return JSON.stringify(value);
+}
+function safeFileName(value){
+  return value.trim().replace(/[^a-zA-Z0-9_-]+/g,"_").replace(/^_+|_+$/g,"").toLowerCase();
+}
+function generateFabricProject(){
+  const button=document.getElementById("fgGenerate");
+  const output=document.getElementById("fgOutput");
+  const progress=document.getElementById("fgProgress");
+  const bar=document.getElementById("fgProgressBar");
+
+  if(typeof JSZip==="undefined"){
+    output.classList.add("error");
+    output.textContent="ZIP library could not load. Check your internet connection and reload LabKit.";
+    return;
+  }
+
+  const data={
+    name:document.getElementById("fgName").value.trim(),
+    id:document.getElementById("fgId").value.trim(),
+    version:document.getElementById("fgVersion").value.trim(),
+    description:document.getElementById("fgDescription").value.trim(),
+    author:document.getElementById("fgAuthor").value.trim(),
+    license:document.getElementById("fgLicense").value.trim(),
+    minecraft:document.getElementById("fgMinecraft").value.trim(),
+    java:document.getElementById("fgJava").value.trim(),
+    loader:document.getElementById("fgLoader").value.trim(),
+    api:document.getElementById("fgApi").value.trim(),
+    loom:document.getElementById("fgLoom").value.trim(),
+    gradle:document.getElementById("fgGradle").value.trim(),
+    packageName:document.getElementById("fgPackage").value.trim(),
+    className:document.getElementById("fgClass").value.trim(),
+    client:document.getElementById("fgClient").checked,
+    mixin:document.getElementById("fgMixin").checked,
+    mixinTarget:document.getElementById("fgMixinTarget").value.trim()
+  };
+
+  const required=["name","id","version","minecraft","java","loader","api","loom","gradle","packageName","className"];
+  if(required.some(key=>!data[key])){
+    output.classList.add("error");output.textContent="Please complete all required fields.";return;
+  }
+  if(!/^[a-z][a-z0-9_-]*$/.test(data.id)){
+    output.classList.add("error");output.textContent="Invalid Mod ID. Use lowercase letters, numbers, underscores or hyphens. It must start with a letter.";return;
+  }
+  if(!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(data.className)){
+    output.classList.add("error");output.textContent="Invalid Java class name. Use a valid Java identifier, such as MyMod.";return;
+  }
+  if(!/^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)*$/.test(data.packageName)){
+    output.classList.add("error");output.textContent="Invalid Java package. Example: com.example.mymod";return;
+  }
+  if(!/^\d+$/.test(data.java)){
+    output.classList.add("error");output.textContent="Java version must be a number, such as 21 or 25.";return;
+  }
+  if(!/^[a-zA-Z0-9.+_-]+$/.test(data.loom)||!/^[a-zA-Z0-9.+_-]+$/.test(data.gradle)){
+    output.classList.add("error");output.textContent="Loom and Gradle versions contain invalid characters.";return;
+  }
+
+  const packagePath=data.packageName.replace(/\./g,"/");
+  const projectFolder=safeFileName(data.id)||"fabric_mod";
+  const mainClass=data.packageName+"."+data.className;
+  const zip=new JSZip();
+
+  const settings=`pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = '${projectFolder}'
+`;
+
+  const properties=`org.gradle.jvmargs=-Xmx2G
+org.gradle.parallel=true
+
+minecraft_version=${data.minecraft}
+loader_version=${data.loader}
+fabric_version=${data.api}
+loom_version=${data.loom}
+
+mod_version=${data.version}
+maven_group=${data.packageName}
+archives_base_name=${projectFolder}
+`;
+
+  const build=`plugins {
+    id 'net.fabricmc.fabric-loom' version "\${loom_version}"
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:\${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:\${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:\${project.fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = Integer.parseInt(project.java_version ?: "${data.java}")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(${data.java})
+    }
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "\${it}_\${project.base.archivesName.get()}" }
+    }
+}
+`;
+
+  const metadata={
+    schemaVersion:1,
+    id:data.id,
+    version:"\${version}",
+    name:data.name,
+    description:data.description||"A Minecraft Fabric mod.",
+    authors:data.author?[data.author]:[],
+    license:data.license||"All-Rights-Reserved",
+    environment:"*",
+    entrypoints:{main:[mainClass]},
+    depends:{
+      fabricloader:">="+data.loader,
+      minecraft:"~"+data.minecraft,
+      java:">="+data.java,
+      "fabric-api":"*"
+    }
+  };
+  if(data.client) metadata.entrypoints.client=[data.packageName+"."+data.className+"Client"];
+  if(data.mixin) metadata.mixins=[data.id+".mixins.json"];
+
+  const javaSource=`package ${data.packageName};
+
+import net.fabricmc.api.ModInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ${data.className} implements ModInitializer {
+
+    public static final String MOD_ID = "${data.id}";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    @Override
+    public void onInitialize() {
+        LOGGER.info("${data.name} has initialized!");
+    }
+}
+`;
+  const clientSource=`package ${data.packageName};
+
+import net.fabricmc.api.ClientModInitializer;
+
+public class ${data.className}Client implements ClientModInitializer {
+
+    @Override
+    public void onInitializeClient() {
+        // Client-side initialization code goes here.
+    }
+}
+`;
+  const mixinSource=`package ${data.packageName}.mixin;
+
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(targets = "${data.mixinTarget}")
+public abstract class ExampleMixin {
+    // Add @Inject, @Redirect, @ModifyArg or other Mixin logic here.
+}
+`;
+  const mixinConfig={
+    required:true,
+    package:data.packageName+".mixin",
+    mixins:["ExampleMixin"],
+    client:[],
+    injectors:{defaultRequire:1}
+  };
+
+  const readme=`# ${data.name}
+
+A Minecraft Fabric mod.
+
+## Project information
+
+- Minecraft: ${data.minecraft}
+- Java: ${data.java}
+- Fabric Loader: ${data.loader}
+- Fabric API: ${data.api}
+- Fabric Loom: ${data.loom}
+
+## Build
+
+1. Install JDK ${data.java}.
+2. Install Gradle ${data.gradle} or open the project in an IDE with Gradle support.
+3. Run:
+
+\`\`\`bash
+gradle build
+\`\`\`
+
+The compiled mod JAR will be in \`build/libs/\`.
+
+## Important
+
+This starter project does not include the Gradle Wrapper scripts or wrapper JAR. You can generate them by running \`gradle wrapper\` after installing Gradle.
+
+Check that the selected Minecraft, Loader, Fabric API, Loom, Gradle and Java versions are mutually compatible before building.
+`;
+
+  zip.file("settings.gradle",settings);
+  zip.file("gradle.properties",properties);
+  zip.file("build.gradle",build);
+  zip.file("LICENSE",data.license==="MIT"?"MIT License\n\nCopyright (c) "+new Date().getFullYear()+" "+(data.author||data.name)+"\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\n":"License: "+(data.license||"All-Rights-Reserved")+"\n");
+  zip.file("README.md",readme);
+  zip.file("src/main/resources/fabric.mod.json",JSON.stringify(metadata,null,2));
+  zip.file("src/main/java/"+packagePath+"/"+data.className+".java",javaSource);
+  if(data.client){
+    zip.file("src/main/java/"+packagePath+"/"+data.className+"Client.java",clientSource);
+  }
+  if(data.mixin){
+    zip.file("src/main/resources/"+data.id+".mixins.json",JSON.stringify(mixinConfig,null,2));
+    zip.file("src/main/java/"+packagePath+"/mixin/ExampleMixin.java",mixinSource);
+  }
+
+  button.disabled=true;
+  progress.style.display="block";
+  bar.style.width="20%";
+  output.classList.remove("error");
+  output.textContent="Preparing project files...";
+
+  zip.generateAsync({type:"blob"},meta=>{
+    bar.style.width=Math.round(meta.percent*0.8+20)+"%";
+  }).then(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=projectFolder+".zip";
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    bar.style.width="100%";
+    output.textContent="✓ Project ZIP generated: "+projectFolder+".zip\n\nContains build.gradle, settings.gradle, gradle.properties, fabric.mod.json, the main Java class, LICENSE and README.md.";
+    button.disabled=false;
+  }).catch(error=>{
+    output.classList.add("error");
+    output.textContent="Could not generate ZIP: "+error.message;
+    button.disabled=false;
+  });
+}
+
+// FABRIC DEPENDENCY CHECKER
+function loadDependencyExample(){
+  const example={
+    schemaVersion:1,
+    id:"example_mod",
+    version:"1.0.0",
+    name:"Example Mod",
+    description:"A Fabric mod.",
+    environment:"*",
+    entrypoints:{main:["com.example.ExampleMod"]},
+    depends:{fabricloader:">=0.19.0",minecraft:"~1.21.1",java:">=21"}
+  };
+  document.getElementById("dependencyInput").value=JSON.stringify(example,null,2);
+  document.getElementById("dependencyOutput").textContent="";
+  document.getElementById("dependencyOutput").classList.remove("error");
+}
+function clearDependencyInput(){
+  document.getElementById("dependencyInput").value="";
+  document.getElementById("dependencyOutput").textContent="";
+  document.getElementById("dependencyOutput").classList.remove("error");
+}
+function checkDependencies(){
+  const output=document.getElementById("dependencyOutput");
+  output.classList.remove("error");
+  let data;
+  try{data=JSON.parse(document.getElementById("dependencyInput").value)}
+  catch(error){output.classList.add("error");output.textContent="INVALID JSON\n\nCould not parse the input: "+error.message;return}
+  const errors=[],warnings=[],notes=[];
+  if(!data||typeof data!=="object"||Array.isArray(data)){
+    output.classList.add("error");output.textContent="INVALID METADATA\n\nThe JSON root must be an object.";return;
+  }
+  if(data.schemaVersion!==1)errors.push("schemaVersion must be 1.");
+  if(typeof data.id!=="string"||! /^[a-z][a-z0-9_-]{0,63}$/.test(data.id))errors.push("id is missing or invalid. Use 1–64 lowercase letters, numbers, underscores or hyphens, starting with a letter.");
+  if(typeof data.version!=="string"||!data.version.trim())errors.push("version must be a non-empty string.");
+  if(typeof data.name!=="string"||!data.name.trim())errors.push("name must be a non-empty string.");
+  if(typeof data.description!=="string"||!data.description.trim())warnings.push("description is missing or empty.");
+  if(data.environment!==undefined&&! ["*","client","server"].includes(data.environment))warnings.push('environment should be "*", "client" or "server".');
+  if(data.entrypoints!==undefined){
+    if(!data.entrypoints||typeof data.entrypoints!=="object"||Array.isArray(data.entrypoints))errors.push("entrypoints must be an object.");
+    else for(const [key,value] of Object.entries(data.entrypoints)){
+      if(!Array.isArray(value)||value.some(item=>typeof item!=="string"||!item.trim()))errors.push('entrypoints."'+key+'" must be an array of non-empty class-name strings.');
+      else if(value.length===0)warnings.push('entrypoints."'+key+'" is empty.');
+    }
+  }else warnings.push("entrypoints is not declared. Add main and/or client entrypoints if your mod needs initialization code.");
+  if(data.depends!==undefined){
+    if(!data.depends||typeof data.depends!=="object"||Array.isArray(data.depends))errors.push("depends must be an object of dependency IDs and version strings.");
+    else for(const [key,value] of Object.entries(data.depends)){
+      if(typeof value!=="string"||!value.trim())errors.push('Dependency "'+key+'" must have a non-empty version constraint string.');
+    }
+  }else warnings.push("depends is missing. Declare the Minecraft, Fabric Loader and Java versions your mod supports.");
+  const deps=data.depends&&typeof data.depends==="object"&&!Array.isArray(data.depends)?data.depends:{};
+  for(const key of ["minecraft","fabricloader","java"]){
+    if(!(key in deps))warnings.push('Recommended dependency "'+key+'" is not declared.');
+  }
+  if(!("fabric-api" in deps))notes.push('fabric-api is not declared. Add it only if your mod requires Fabric API.');
+  if(data.mixins!==undefined){
+    if(!Array.isArray(data.mixins))errors.push("mixins must be an array of Mixin configuration file names or objects.");
+    else if(data.mixins.length===0)notes.push("mixins is an empty array; remove it if the mod does not use Mixins.");
+  }
+  if(data.suggests!==undefined&&(!data.suggests||typeof data.suggests!=="object"||Array.isArray(data.suggests)))errors.push("suggests must be an object.");
+  if(data.recommends!==undefined&&(!data.recommends||typeof data.recommends!=="object"||Array.isArray(data.recommends)))errors.push("recommends must be an object.");
+  const lines=[];
+  lines.push(errors.length?"CHECK RESULT: ISSUES FOUND":warnings.length?"CHECK RESULT: WARNINGS":"CHECK RESULT: BASIC STRUCTURE OK");
+  lines.push("Mod: "+(data.name||data.id||"Unknown"));
+  lines.push("Mod ID: "+(data.id||"Not set"));
+  lines.push("");
+  lines.push("ERRORS ("+errors.length+")");
+  lines.push(errors.length?errors.map((x,i)=>(i+1)+". "+x).join("\n"):"None");
+  lines.push("");
+  lines.push("WARNINGS ("+warnings.length+")");
+  lines.push(warnings.length?warnings.map((x,i)=>(i+1)+". "+x).join("\n"):"None");
+  lines.push("");
+  lines.push("NOTES ("+notes.length+")");
+  lines.push(notes.length?notes.map((x,i)=>(i+1)+". "+x).join("\n"):"None");
+  lines.push("");
+  lines.push("DECLARED DEPENDENCIES");
+  const entries=Object.entries(deps);
+  lines.push(entries.length?entries.map(([key,value])=>"- "+key+": "+value).join("\n"):"None");
+  lines.push("");
+  lines.push("LIMITATION: This checker validates common fabric.mod.json structure only. It does not confirm version compatibility, resolve constraints, inspect source code, or verify dependency availability.");
+  output.textContent=lines.join("\n");
+  if(errors.length)output.classList.add("error");
+  saveHistory("dependency");
+}
+
+// MODRINTH README GENERATOR
+function readmeLines(id){return document.getElementById(id).value.split("\n").map(line=>line.trim()).filter(Boolean)}
+function escapeHTML(value){return value.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function renderReadmePreview(markdown){
+  const safe=escapeHTML(markdown);
+  const lines=safe.split("\n");let html="",inList=false;
+  const inline=text=>text.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  for(const line of lines){
+    if(/^[-*] /.test(line)){if(!inList){html+="<ul>";inList=true;}html+="<li>"+inline(line.slice(2))+"</li>";continue;}
+    if(inList){html+="</ul>";inList=false;}
+    if(!line.trim())continue;
+    if(line.startsWith("### "))html+="<h3>"+inline(line.slice(4))+"</h3>";
+    else if(line.startsWith("## "))html+="<h2>"+inline(line.slice(3))+"</h2>";
+    else if(line.startsWith("# "))html+="<h1>"+inline(line.slice(2))+"</h1>";
+    else html+="<p>"+inline(line)+"</p>";
+  }
+  if(inList)html+="</ul>";
+  return html||'<p class="notice">Generate the README to see a preview.</p>';
+}
+function generateReadme(){
+  const name=document.getElementById("readmeName").value.trim()||"My Project";
+  const description=document.getElementById("readmeDescription").value.trim();
+  const minecraft=document.getElementById("readmeMinecraft").value.trim();
+  const loaders=document.getElementById("readmeLoaders").value.trim();
+  const features=readmeLines("readmeFeatures"),install=readmeLines("readmeInstall");
+  const dependencies=readmeLines("readmeDependencies"),links=readmeLines("readmeLinks");
+  const credits=readmeLines("readmeCredits"),notes=readmeLines("readmeNotes");
+  const lines=["# "+name];
+  if(description)lines.push("",description);
+  const badges=[];
+  if(loaders)badges.push("**Loader:** "+loaders);
+  if(minecraft)badges.push("**Minecraft:** "+minecraft);
+  if(badges.length)lines.push("",badges.join("  ·  "));
+  if(features.length)lines.push("","## Features","",...features.map(x=>"- "+x));
+  if(install.length)lines.push("","## Installation","",...install.map((x,i)=>/^\d+[.)] /.test(x)?x:(i+1)+". "+x));
+  if(dependencies.length)lines.push("","## Dependencies","",...dependencies.map(x=>"- "+x));
+  if(links.length){lines.push("","## Links","");for(const entry of links){const parts=entry.split("|");const label=(parts[0]||"").trim(),url=(parts[1]||"").trim();if(label&&/^https?:\/\//i.test(url))lines.push("- ["+label+"]("+url+")");else lines.push("- "+entry);}}
+  if(credits.length)lines.push("","## Credits","",...credits.map(x=>"- "+x));
+  if(notes.length)lines.push("","## Notes","",...notes);
+  const output=lines.join("\n").trim()+"\n";
+  document.getElementById("readmeOutput").value=output;
+  document.getElementById("readmePreview").innerHTML=renderReadmePreview(output);
+  saveHistory("readme");
+}
+function resetReadme(){
+  ["readmeName","readmeDescription","readmeMinecraft","readmeFeatures","readmeDependencies","readmeLinks","readmeCredits","readmeNotes","readmeOutput"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("readmeLoaders").value="Fabric";
+  document.getElementById("readmeInstall").value="";
+  document.getElementById("readmePreview").innerHTML='<p class="notice">Generate the README to see a preview.</p>';
+}
+
+// COLOR CONVERTER
+function hexToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h,s;const l=(max+min)/2;
+  if(max===min){h=s=0}
+  else{
+    const d=max-min;
+    s=l>.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4}
+    h/=6;
+  }
+  return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+}
+function convertColor(){
+  const input=document.getElementById("hexInput").value.trim();
+  const error=document.getElementById("colorError"),match=input.match(/^#?([0-9a-fA-F]{6})$/);
+  if(!match){error.textContent="Please enter a valid 6-digit HEX color, such as #ec78ae.";return}
+  error.textContent="";
+  const hex="#"+match[1].toUpperCase(),value=match[1];
+  const r=parseInt(value.slice(0,2),16),g=parseInt(value.slice(2,4),16),b=parseInt(value.slice(4,6),16);
+  const hsl=hexToHsl(r,g,b);
+  document.getElementById("hexResult").textContent=hex;
+  document.getElementById("rgbResult").textContent=`${r}, ${g}, ${b}`;
+  document.getElementById("hslResult").textContent=`${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%`;
+  document.getElementById("colorPreview").style.background=hex;
+}
+document.getElementById("hexInput").addEventListener("keydown",e=>{if(e.key==="Enter")convertColor()});
+
+// CHANGELOG
+function linesFrom(id){return document.getElementById(id).value.split("\n").map(line=>line.trim()).filter(Boolean)}
+function buildChangelog(){
+  const project=document.getElementById("changeProject").value.trim()||"Project";
+  const version=document.getElementById("changeVersion").value.trim()||"Unreleased";
+  const type=document.getElementById("changeType").value;
+  const features=linesFrom("changeFeatures"),improvements=linesFrom("changeImprovements"),fixes=linesFrom("changeFixes");
+  let output=`# ${project} ${version} — ${type}\n`;
+  if(features.length)output+="\n## Added\n"+features.map(x=>"- "+x).join("\n")+"\n";
+  if(improvements.length)output+="\n## Changed\n"+improvements.map(x=>"- "+x).join("\n")+"\n";
+  if(fixes.length)output+="\n## Fixed\n"+fixes.map(x=>"- "+x).join("\n")+"\n";
+  if(!features.length&&!improvements.length&&!fixes.length)output+="\nNo changes listed.\n";
+  document.getElementById("changelogOutput").value=output.trim();
+}
+function clearChangelog(){
+  ["changeProject","changeVersion","changeFeatures","changeImprovements","changeFixes","changelogOutput"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("changeType").selectedIndex=0;
+}
+
+convertColor();
+renderHistory();
+</script>
+</body>
+</html>
